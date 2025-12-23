@@ -1,0 +1,91 @@
+<svg viewBox="0 0 800 650" xmlns="http://www.w3.org/2000/svg">
+    <!-- Title -->
+    <text x="400" y="35" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">
+        Moodle Docker Architecture
+    </text>
+
+    <!-- Docker Container Box -->
+    <rect x="50" y="70" width="700" height="450" fill="#2496ED" fill-opacity="0.1" stroke="#2496ED" stroke-width="3" rx="10"/>
+    <text x="75" y="100" font-size="18" font-weight="bold" fill="#2496ED">🐳 Docker Environment</text>
+
+    <!-- Moodle Container -->
+    <g>
+        <rect x="90" y="130" width="280" height="360" fill="#FF8C00" fill-opacity="0.15" stroke="#FF8C00" stroke-width="2" rx="8"/>
+        <text x="230" y="160" font-size="18" font-weight="bold" text-anchor="middle" fill="#FF8C00">Moodle Container</text>
+
+        <!-- Apache -->
+        <rect x="120" y="180" width="220" height="65" fill="#D22128" fill-opacity="0.2" stroke="#D22128" stroke-width="2" rx="5"/>
+        <text x="230" y="205" font-size="15" font-weight="bold" text-anchor="middle" fill="#D22128">Apache Web Server</text>
+        <text x="230" y="225" font-size="13" text-anchor="middle" fill="#555">Port 80 → 8080</text>
+
+        <!-- PHP -->
+        <rect x="120" y="260" width="220" height="75" fill="#777BB4" fill-opacity="0.2" stroke="#777BB4" stroke-width="2" rx="5"/>
+        <text x="230" y="285" font-size="15" font-weight="bold" text-anchor="middle" fill="#777BB4">PHP 8.2</text>
+        <text x="230" y="305" font-size="12" text-anchor="middle" fill="#555">Extensions: GD, MySQLi,</text>
+        <text x="230" y="323" font-size="12" text-anchor="middle" fill="#555">ZIP, INTL, SOAP, OPcache</text>
+
+        <!-- Moodle Files -->
+        <rect x="120" y="350" width="220" height="60" fill="#F98012" fill-opacity="0.2" stroke="#F98012" stroke-width="2" rx="5"/>
+        <text x="230" y="375" font-size="15" font-weight="bold" text-anchor="middle" fill="#F98012">Moodle Files</text>
+        <text x="230" y="395" font-size="12" text-anchor="middle" fill="#555">/var/www/moodle</text>
+
+        <!-- Volume Mount -->
+        <rect x="120" y="425" width="220" height="50" fill="#4CAF50" fill-opacity="0.2" stroke="#4CAF50" stroke-width="2" rx="5"/>
+        <text x="230" y="448" font-size="13" font-weight="bold" text-anchor="middle" fill="#4CAF50">Volume: moodledata</text>
+        <text x="230" y="465" font-size="11" text-anchor="middle" fill="#555">/var/moodledata</text>
+    </g>
+
+    <!-- MariaDB Container -->
+    <g>
+        <rect x="430" y="130" width="280" height="280" fill="#003545" fill-opacity="0.15" stroke="#003545" stroke-width="2" rx="8"/>
+        <text x="570" y="160" font-size="18" font-weight="bold" text-anchor="middle" fill="#003545">MariaDB Container</text>
+
+        <!-- MariaDB Server -->
+        <rect x="460" y="180" width="220" height="65" fill="#003545" fill-opacity="0.2" stroke="#003545" stroke-width="2" rx="5"/>
+        <text x="570" y="205" font-size="15" font-weight="bold" text-anchor="middle" fill="#003545">MariaDB 10.11</text>
+        <text x="570" y="225" font-size="13" text-anchor="middle" fill="#555">Port 3306</text>
+
+        <!-- Database -->
+        <rect x="460" y="260" width="220" height="60" fill="#00758F" fill-opacity="0.2" stroke="#00758F" stroke-width="2" rx="5"/>
+        <text x="570" y="285" font-size="15" font-weight="bold" text-anchor="middle" fill="#00758F">Database: moodle</text>
+        <text x="570" y="305" font-size="12" text-anchor="middle" fill="#555">User: moodle</text>
+
+        <!-- Volume -->
+        <rect x="460" y="335" width="220" height="50" fill="#4CAF50" fill-opacity="0.2" stroke="#4CAF50" stroke-width="2" rx="5"/>
+        <text x="570" y="358" font-size="13" font-weight="bold" text-anchor="middle" fill="#4CAF50">Volume: mariadb_data</text>
+        <text x="570" y="375" font-size="11" text-anchor="middle" fill="#555">/var/lib/mysql</text>
+    </g>
+
+    <!-- Connection Arrow between containers -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#444"/>
+        </marker>
+        <marker id="arrowhead-dash" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+        </marker>
+    </defs>
+
+    <!-- MySQL Connection -->
+    <line x1="370" y1="290" x2="430" y2="290" stroke="#444" stroke-width="3" marker-end="url(#arrowhead)"/>
+    <text x="400" y="275" font-size="13" text-anchor="middle" fill="#444" font-weight="bold">MySQL</text>
+    <text x="400" y="310" font-size="13" text-anchor="middle" fill="#444" font-weight="bold">Connection</text>
+
+    <!-- User Browser -->
+    <rect x="300" y="560" width="200" height="70" fill="#4285F4" fill-opacity="0.2" stroke="#4285F4" stroke-width="2" rx="8"/>
+    <text x="400" y="587" font-size="16" font-weight="bold" text-anchor="middle" fill="#4285F4">👤 User Browser</text>
+    <text x="400" y="610" font-size="13" text-anchor="middle" fill="#555">http://localhost:8080</text>
+
+    <!-- Arrow from browser to Moodle -->
+    <line x1="350" y1="560" x2="280" y2="490" stroke="#666" stroke-width="2.5" marker-end="url(#arrowhead-dash)" stroke-dasharray="8,4"/>
+    <text x="305" y="530" font-size="12" text-anchor="middle" fill="#666" font-weight="bold">HTTP</text>
+
+    <!-- Local Files indicator -->
+    <rect x="50" y="560" width="200" height="70" fill="#FF6B6B" fill-opacity="0.2" stroke="#FF6B6B" stroke-width="2" rx="8"/>
+    <text x="150" y="587" font-size="16" font-weight="bold" text-anchor="middle" fill="#FF6B6B">📁 Local Moodle Files</text>
+    <text x="150" y="610" font-size="13" text-anchor="middle" fill="#555">./moodle/</text>
+
+    <!-- Arrow from local files to container -->
+    <line x1="180" y1="560" x2="200" y2="490" stroke="#666" stroke-width="2.5" marker-end="url(#arrowhead-dash)" stroke-dasharray="8,4"/>
+    <text x="175" y="530" font-size="12" text-anchor="middle" fill="#666" font-weight="bold">Volume Mount</text>
+</svg>
