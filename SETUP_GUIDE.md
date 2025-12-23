@@ -25,6 +25,7 @@ moodle-docker/
 Create `docker-compose.yml` in your project directory:
 
 ```yaml
+version: '3'
 services:
   mariadb:
     image: mariadb:10.11
@@ -37,7 +38,6 @@ services:
       - mariadb_data:/var/lib/mysql
     ports:
       - "3306:3306"
-
   moodle:
     image: php:8.2-apache
     ports:
@@ -54,20 +54,23 @@ services:
         set -e
         echo "Installing PHP extensions..."
         apt-get update
-        apt-get install -y libpng-dev libjpeg-dev libzip-dev libicu-dev libxml2-dev libcurl4-openssl-dev
+        apt-get install -y libpng-dev libjpeg-dev libzip-dev libicu-dev libxml2-dev libcurl4-openssl-dev libexif-dev
         docker-php-ext-configure gd --with-jpeg
-        docker-php-ext-install gd mysqli pdo pdo_mysql zip intl soap opcache
-        
+        docker-php-ext-install gd mysqli pdo pdo_mysql zip intl soap opcache exif
+
+        echo "Configuring PHP settings..."
+        echo "zend.exception_ignore_args = On" >> /usr/local/etc/php/conf.d/security.ini
+        echo "max_input_vars = 5000" >> /usr/local/etc/php/conf.d/moodle.ini
+
         echo "Setting permissions..."
         chown -R www-data:www-data /var/www/moodle
         chmod -R 755 /var/www/moodle
         mkdir -p /var/moodledata
         chown -R www-data:www-data /var/moodledata
         chmod -R 777 /var/moodledata
-        
+
         echo "Starting Apache..."
         apache2-foreground
-
 volumes:
   mariadb_data:
   moodledata:
