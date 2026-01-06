@@ -5,7 +5,7 @@ Complete guide to set up Moodle 5.x with Docker using local Moodle files.
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- Moodle 5.1 source files extracted locally
+- Moodle 5.x source files extracted locally
 - Port 8080 available (or use another port)
 
 ## Project Structure
@@ -14,7 +14,7 @@ Complete guide to set up Moodle 5.x with Docker using local Moodle files.
 moodle-docker/
 ├── docker-compose.yml
 └── moodle/              # Your extracted Moodle files
-    ├── public/          # Web root for Moodle 5.1
+    ├── public/          # Web root for Moodle 5.x
     ├── lib/
     ├── config.php       # Will be created
     └── ...
@@ -112,7 +112,7 @@ require_once($CFG->dirroot . '/lib/setup.php');
 
 ## Step 3: Update Public config.php
 
-Moodle 5.1 has a `config.php` file in the `public/` directory. Update it to point to the main config:
+Moodle 5.x has a `config.php` file in the `public/` directory. Update it to point to the main config:
 
 Edit `moodle/public/config.php`:
 
@@ -164,7 +164,7 @@ ports:
 
 ### Issue 2: PHP Version Error
 
-**Error:** `Moodle 5.1 requires at least PHP 8.2.0`
+**Error:** `Moodle 5.x requires at least PHP 8.2.0`
 
 **Solution:** Ensure you're using `php:8.2-apache` or higher in docker-compose.yml (already included in the config above).
 
