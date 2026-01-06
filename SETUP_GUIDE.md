@@ -107,7 +107,7 @@ $CFG->libdir    = '/var/www/moodle/lib';
 $CFG->directorypermissions = 02777;
 $CFG->admin = 'admin';
 
-require_once(__DIR__ . '/lib/setup.php');
+require_once($CFG->dirroot . '/lib/setup.php');
 ```
 
 ## Step 3: Update Public config.php
