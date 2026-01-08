@@ -29,6 +29,8 @@ version: '3'
 services:
   mariadb:
     image: mariadb:10.11
+    container_name: moodle_db
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: moodle
       MYSQL_DATABASE: moodle
@@ -38,8 +40,18 @@ services:
       - mariadb_data:/var/lib/mysql
     ports:
       - "3306:3306"
+    networks:
+      - moodle_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   moodle:
     image: php:8.2-apache
+    container_name: moodle_app
+    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
@@ -47,7 +59,10 @@ services:
       - ./moodle/public:/var/www/html
       - moodledata:/var/moodledata
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
+    networks:
+      - moodle_network
     entrypoint: /bin/bash -c
     command:
       - |
@@ -65,12 +80,76 @@ services:
         echo "Setting permissions..."
         chown -R www-data:www-data /var/www/moodle
         chmod -R 755 /var/www/moodle
+        chown -R www-data:www-data /var/www/html
+        chmod -R 755 /var/www/html
+
+        # Ensure components.json is accessible in web root
+        if [ ! -f /var/www/html/lib/components.json ] && [ -f /var/www/moodle/lib/components.json ]; then
+            cp /var/www/moodle/lib/components.json /var/www/html/lib/components.json
+            chown www-data:www-data /var/www/html/lib/components.json
+        fi
+
+        # Moodle code looks for /var/www/lib/components.json (dirname 3 levels up from lib/classes)
+        # Create directory and copy necessary files to make them accessible
+        if [ ! -d /var/www/lib ]; then
+            mkdir -p /var/www/lib
+        fi
+
+        # Copy components.json if needed
+        if [ ! -f /var/www/lib/components.json ]; then
+            if [ -f /var/www/html/lib/components.json ]; then
+                cp /var/www/html/lib/components.json /var/www/lib/components.json
+            elif [ -f /var/www/moodle/lib/components.json ]; then
+                cp /var/www/moodle/lib/components.json /var/www/lib/components.json
+            fi
+            chown www-data:www-data /var/www/lib/components.json 2>/dev/null || true
+        fi
+
+        # Copy plugins.json if needed (also referenced by Moodle)
+        if [ ! -f /var/www/lib/plugins.json ]; then
+            if [ -f /var/www/html/lib/plugins.json ]; then
+                cp /var/www/html/lib/plugins.json /var/www/lib/plugins.json
+            elif [ -f /var/www/moodle/lib/plugins.json ]; then
+                cp /var/www/moodle/lib/plugins.json /var/www/lib/plugins.json
+            fi
+            chown www-data:www-data /var/www/lib/plugins.json 2>/dev/null || true
+        fi
+
+        # Create symlinks to handle path resolution
+        # components.json has paths like "public/cache" which get resolved via get_path()
+        # With $CFG->root = '/var/www/html', get_path("public/cache") returns /var/www/html/public/cache
+        # But actual files are at /var/www/html/cache, so we need /var/www/html/public -> /var/www/html
+        if [ -e /var/www/html/public ] && [ ! -L /var/www/html/public ]; then
+            rm -rf /var/www/html/public
+        fi
+        if [ ! -e /var/www/html/public ]; then
+            cd /var/www/html && ln -sf . public
+        fi
+
+        # Also create /var/www/public -> /var/www/html for cases where dirname() resolves to /var/www
+        if [ -e /var/www/public ] && [ ! -L /var/www/public ]; then
+            rm -rf /var/www/public
+        fi
+        if [ ! -e /var/www/public ]; then
+            ln -sf html /var/www/public
+        fi
+
+        # Ensure cache directories exist with proper permissions
+        mkdir -p /var/www/html/cache
+        chown -R www-data:www-data /var/www/html/cache
+        chmod -R 777 /var/www/html/cache
+
         mkdir -p /var/moodledata
         chown -R www-data:www-data /var/moodledata
         chmod -R 777 /var/moodledata
 
         echo "Starting Apache..."
         apache2-foreground
+
+networks:
+  moodle_network:
+    driver: bridge
+
 volumes:
   mariadb_data:
   moodledata:
@@ -102,8 +181,10 @@ $CFG->dboptions = array(
 
 $CFG->wwwroot   = 'http://localhost:8080';
 $CFG->dataroot  = '/var/moodledata';
-$CFG->dirroot   = '/var/www/moodle';
-$CFG->libdir    = '/var/www/moodle/lib';
+$CFG->dirroot   = '/var/www/html';
+$CFG->root      = '/var/www/html';  // Set root to prevent dirname() from going up a level
+$CFG->libdir    = '/var/www/html/lib';
+$CFG->cachedir   = '/var/moodledata/cache';  // Cache directory for component cache
 $CFG->directorypermissions = 02777;
 $CFG->admin = 'admin';
 
@@ -118,11 +199,15 @@ Edit `moodle/public/config.php`:
 
 ```php
 <?php
-$configfile = '/var/www/moodle/config.php';
+$configfile = __DIR__ . '/../config.php';
+if (!file_exists($configfile)) {
+    $configfile = '/var/www/moodle/config.php';
+}
 if (!file_exists($configfile)) {
     header("Location: install.php");
     die;
 }
+
 require($configfile);
 ```
 
